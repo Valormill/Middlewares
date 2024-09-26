@@ -9,9 +9,11 @@
 #include <flashFile.h>
 #include "flash_program.h"
 #include "defs.h"
+#include "main.h"
 #include <string>
 #include "util.h"
 #include <iostream>
+#include "debug.h"
 #include <stdio.h>
 #include <cstring>
 #include <vector>
@@ -20,38 +22,22 @@
 // Define constants for easy modification
 #define MAX_SAVED_HANDLES 10        // Maximum number of saved handles
 #define MAX_HANDLE_NAME_LENGTH 20   // Maximum length of handle name (including null terminator)
-#define CONFIG_FLASH_ADDRESS 0x81fe000 // Flash memory address for config.bin
-#define FIRMWARE_FLASH_ADDRESS 0x81fc000 // Flash memory address for firmware.bin
 
 // Array to store saved handles
 char savedHandles[MAX_SAVED_HANDLES][MAX_HANDLE_NAME_LENGTH];
 int savedHandlesCount = 0;
 
-const char* readAndLoadFlashData(const char* handle, uint8_t* data, size_t& size)
+int readAndLoadFlashData(const char* handle, uint8_t* data, size_t& size, uint32_t addr)
 {
     int result;
 
-    if (std::strcmp(handle, "config.bin") == 0) {
-        result = flash_read(CONFIG_FLASH_ADDRESS, reinterpret_cast<uint32_t*>(data), size);
-        if (result == 0) {
-            return "Success: Config data read from flash.";
-        } else {
-            return "Error: Failed to read config data from flash.";
-        }
-    } else if (std::strcmp(handle, "firmware.bin") == 0) {
-        result = flash_read(FIRMWARE_FLASH_ADDRESS, reinterpret_cast<uint32_t*>(data), size);
-        if (result == 0) {
-            return "Success: Firmware data read from flash.";
-        } else {
-            return "Error: Failed to read firmware data from flash.";
-        }
-    }
-
-    return "Error: Unknown handle.";
+    // Use the provided address instead of hardcoded addresses
+    result = flash_read(addr, reinterpret_cast<uint32_t*>(data), size);
+    return (result == 0) ? 0 : 1;  // Return 0 for success, 1 for failure
 }
 
-// Implementation of the fileOpen function with text-based return
-const char* fileOpen(const char* handle) {
+// Implementation of the fileOpen function with numeric return
+int fileOpen(const char* handle) {
     bool inUse = false;
     for (int i = 0; i < savedHandlesCount; ++i) {
         if (std::strcmp(savedHandles[i], handle) == 0) {
@@ -61,7 +47,7 @@ const char* fileOpen(const char* handle) {
     }
 
     if (inUse) {
-        return "Error: Handle is already in use.";
+        return 1;  // Handle is already in use
     }
 
     if (std::strcmp(handle, "config.bin") == 0 || std::strcmp(handle, "firmware.bin") == 0) {
@@ -69,37 +55,20 @@ const char* fileOpen(const char* handle) {
             std::strncpy(savedHandles[savedHandlesCount], handle, MAX_HANDLE_NAME_LENGTH - 1);
             savedHandles[savedHandlesCount][MAX_HANDLE_NAME_LENGTH - 1] = '\0';  // Ensure null-termination
             ++savedHandlesCount;
-            return "Success: Handle opened.";
+            return 0;  // Handle opened successfully
         }
-        return "Error: Max handles reached.";
+        return 1;  // Max handles reached
     }
 
-    return "Error: Unknown handle.";
+    return 1;  // Unknown handle
 }
 
-const char* fileWrite(const char* handle, uint32_t* data, size_t size) {
-    const char* result;
+int fileWrite(const char* handle, uint32_t* data, size_t size, uint32_t addr) {
+    int result;
 
-    if (std::strcmp(handle, "config.bin") == 0) {
-        result = flash_pageEraseWriteVerify(data, size, CONFIG_FLASH_ADDRESS);
-        // Return the result of the write operation
-        if (std::strncmp(result, "Success", 7) == 0) {
-            return "Success: Config data written to flash.";
-        } else {
-            return result;  // Return the specific error from flash_pageEraseWriteVerify
-        }
-    } else if (std::strcmp(handle, "firmware.bin") == 0) {
-        result = flash_pageEraseWriteVerify(data, size, FIRMWARE_FLASH_ADDRESS);
-        // Return the result of the write operation
-        if (std::strncmp(result, "Success", 7) == 0) {
-            return "Success: Firmware data written to flash.";
-        } else {
-            return result;  // Return the specific error from flash_pageEraseWriteVerify
-        }
-    }
-
-    return "Error: Unknown handle.";
+    // Use the provided address instead of hardcoded addresses
+    result = flash_pageEraseWriteVerify(data, size, addr);
+    return (result == 0) ? 0 : 1;  // Return 0 for success, 1 for failure
 }
-
 
 

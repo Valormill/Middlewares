@@ -1,0 +1,130 @@
+Here's the updated documentation to reflect the changes made to the config and firmware modules, including the ability to pass in an address for reading and writing operations.
+Documentation for Config, Firmware, FlashFile, and FlashProgram
+
+This document explains the relationship, functionality, and error handling mechanisms in the config, firmware, flashFile, and flash_program modules. It is important to note that ID = -1 is reserved for error handling and should not be used as a valid identifier for data entries.
+1. Config Module
+
+The config module manages configuration data such as integers and strings, allowing this data to be written to and read from flash memory. It provides functions to handle configuration data with robust error handling.
+Key Functions:
+
+    configWrite:
+        Writes a configuration value (integer or string) to memory.
+        Parameters:
+            name (string): The name of the config entry.
+            id (integer): The identifier for the entry (must not be -1).
+            type (char): 'i' for integer, 's' for string.
+            data (void*): Pointer to the data.
+        Error Handling:
+            Returns 1 if the id is negative or the data pointer is null.
+            If saving the name-ID pair using configSaveHandles fails, the error code from that function is returned.
+        Returns: 0 for success or error code based on the outcome of the operation.
+
+    configUpdateInt:
+        Updates the value of an existing configuration integer using only the ID and new value.
+        Parameters:
+            id (integer): The identifier for the entry (must not be -1).
+            value (int): The new value to set.
+        Error Handling:
+            Returns 1 if the ID is invalid or if the update fails.
+        Returns: 0 for success upon successful update.
+
+    configUpdateString:
+        Updates the value of an existing configuration string using only the ID and new value.
+        Parameters:
+            id (integer): The identifier for the entry (must not be -1).
+            str (const char*): The new string value to set.
+        Error Handling:
+            Returns 1 if the ID is invalid or if the update fails.
+        Returns: 0 for success upon successful update.
+
+    configGetInt & configGetString:
+        Retrieves integer or string data using the entry ID.
+        Error Handling:
+            If the entry cannot be found, these functions return -1 to indicate failure.
+            Important: ID -1 is reserved for error handling and should not be used for valid data.
+        Returns: The requested value or -1 if the entry is not found.
+
+    configGetIDFromName:
+        Retrieves the ID associated with a configuration name.
+        Parameters:
+            name (string): The name to look up.
+        Error Handling:
+            Returns 1 if the name cannot be found.
+        Returns: The ID tied to the name or -1 to indicate failure.
+
+    configOpen:
+        Opens the config.bin file in flash memory.
+        Parameters:
+            str (string): The handle for the config file.
+        Error Handling:
+            Returns 1 if the handle is already in use or if the maximum number of handles is reached.
+        Returns: 0 for success or an error code indicating the outcome.
+
+    flashConfig:
+        Writes configuration data from memory to flash.
+        Parameters:
+            address (uint32_t): The address at which to write the config data.
+        Error Handling:
+            Returns 1 if the flash operation fails.
+        Returns: 0 for success or an error code based on the operation.
+
+2. Firmware Module
+
+The firmware module functions similarly to the config module but is intended to handle firmware-related data. It manages integer and string entries for firmware settings.
+Key Functions:
+
+    firmwareWrite:
+        Writes firmware-related data to memory.
+        Parameters: Similar to configWrite, plus an additional address parameter.
+        Error Handling: Same as configWrite, providing specific messages for firmware operations.
+
+    firmwareUpdateInt:
+        Updates the value of an existing firmware integer using only the ID and new value.
+        Parameters:
+            id (integer): The identifier for the entry (must not be -1).
+            newValue (int): The new value to set.
+        Error Handling:
+            Returns 1 if the ID is invalid or if the update fails.
+        Returns: 0 for success upon successful update.
+
+    firmwareUpdateString:
+        Updates the value of an existing firmware string using only the ID and new value.
+        Parameters:
+            id (integer): The identifier for the entry (must not be -1).
+            newValue (const char*): The new string value to set.
+        Error Handling:
+            Returns 1 if the ID is invalid or if the update fails.
+        Returns: 0 for success upon successful update.
+
+    firmwareGetInt & firmwareGetString:
+        Retrieves firmware-related integer or string data using the entry ID.
+        Error Handling:
+            Returns -1 if the data cannot be found, with ID -1 reserved for error handling.
+        Returns: The requested data or -1 if the entry is not found.
+
+    firmwareGetIDFromName:
+        Retrieves the ID associated with a firmware name.
+        Parameters: Similar to configGetIDFromName.
+        Error Handling:
+            Returns 1 if the name is not found.
+        Returns: The ID tied to the name or -1 to indicate failure.
+
+    firmwareOpen:
+        Opens the firmware.bin file in flash memory.
+        Parameters:
+            str (string): The handle for the firmware file.
+        Error Handling:
+            Returns 1 if the handle is already in use or if the maximum number of handles is reached.
+        Returns: 0 for success or an error code indicating the outcome.
+
+    flashFirmware:
+        Writes firmware data from memory to flash.
+        Parameters:
+            address (uint32_t): The address at which to write the firmware data.
+        Error Handling:
+            Returns 1 if the flash operation fails.
+        Returns: 0 for success or an error code based on the operation.
+    Error Handling:
+        Returns "Error: Failed to write firmware data to flash" if the flash operation fails.
+    Returns: A success or error message based on the operation.
+

@@ -15,11 +15,10 @@
 #define MAX_INT_COUNT 5            // Maximum number of integers in firmware
 #define MAX_STRING_COUNT 5         // Maximum number of strings in firmware
 #define BUFFER_SIZE 256            // Default buffer size for loading and flushing
-#define FIRMWARE_BIN_ADDRESS 0x81fc000 // Flash address for firmware.bin
 #define STRING_ENTRY_SIZE 20       // Size of each string entry
 #define INT_ENTRY_SIZE (sizeof(int) + sizeof(int) + sizeof(int)) // Type + ID + value size
 
-#define MAX_NAME_ID_PAIRS 10  // Maximum number of name-ID pairs
+#define MAX_NAME_ID_PAIRS 10       // Maximum number of name-ID pairs
 
 NameIDPair firmwareNameIDStorage[MAX_NAME_ID_PAIRS];
 int firmwareNameIDCount = 0;
@@ -27,8 +26,8 @@ int firmwareNameIDCount = 0;
 InitArrayMap firmwareArrayMap = {{}, 0, {}, 0};
 
 // Function to update an integer value based on ID
-const char* firmwareUpdateInt(int id, int newValue) {
-    if (id < 0) return "Error: Invalid ID";
+int firmwareUpdateInt(int id, int newValue) {
+    if (id < 0) return 1; // Invalid ID
 
     bool updated = false;
     for (size_t i = 0; i < firmwareArrayMap.intCount; ++i) {
@@ -39,16 +38,12 @@ const char* firmwareUpdateInt(int id, int newValue) {
         }
     }
 
-    if (!updated) {
-        return "Error: ID not found in firmware";
-    }
-
-    return "Success: Integer value updated in firmware";
+    return updated ? 0 : 1; // Return 0 for success, 1 for ID not found
 }
 
 // Function to update a string value based on ID
-const char* firmwareUpdateString(int id, const char* newValue) {
-    if (id < 0 || !newValue) return "Error: Invalid ID or value";
+int firmwareUpdateString(int id, const char* newValue) {
+    if (id < 0 || !newValue) return 1; // Invalid ID or value
 
     bool updated = false;
     for (size_t i = 0; i < firmwareArrayMap.stringCount; ++i) {
@@ -60,30 +55,25 @@ const char* firmwareUpdateString(int id, const char* newValue) {
         }
     }
 
-    if (!updated) {
-        return "Error: ID not found in firmware";
-    }
-
-    return "Success: String value updated in firmware";
+    return updated ? 0 : 1; // Return 0 for success, 1 for ID not found
 }
 
-const char* firmwareWrite(const char* name, int id, char type, const void* data) {
-    if (id < 0 || !data) return "not success: invalid ID or data";
+int firmwareWrite(const char* name, int id, char type, const void* data) {
+    if (id < 0 || !data) return 1; // Invalid ID or data
 
-    const char* handleResult = firmwareSaveHandles(name, id);
-    if (std::strcmp(handleResult, "success: name-ID pair saved for firmware") != 0 &&
-        std::strcmp(handleResult, "success: ID updated for existing firmware name") != 0) {
+    int handleResult = firmwareSaveHandles(name, id);
+    if (handleResult != 0) {
         return handleResult;  // Return the error if saving the handle fails
     }
     switch (type) {
         case 'i':
             firmwareWriteInt(id, *static_cast<const int*>(data));
-            return "success: integer data written to firmware";
+            return 0; // Success
         case 's':
             firmwareWriteString(id, static_cast<const char*>(data));
-            return "success: string data written to firmware";
+            return 0; // Success
         default:
-            return "not success: unknown data type";
+            return 1; // Unknown data type
     }
 }
 
@@ -116,24 +106,6 @@ void firmwareWriteString(int id, const char* str) {
     }
 }
 
-int firmwareGetInt(int id) {
-    for (size_t i = 0; i < firmwareArrayMap.intCount; ++i) {
-        if (firmwareArrayMap.intArray[i].id == id && firmwareArrayMap.intArray[i].type == 0) {
-            return firmwareArrayMap.intArray[i].value;
-        }
-    }
-    return -1;
-}
-
-const char* firmwareGetString(int id) {
-    for (size_t i = 0; i < firmwareArrayMap.stringCount; ++i) {
-        if (firmwareArrayMap.stringArray[i].id == id && firmwareArrayMap.stringArray[i].type == 1) {
-            return firmwareArrayMap.stringArray[i].value;
-        }
-    }
-    return "-1";
-}
-
 void firmwareFlush(uint32_t* buffer, size_t& bufferSize) {
     size_t intArraySize = firmwareArrayMap.intCount * INT_ENTRY_SIZE;
     size_t stringArraySize = firmwareArrayMap.stringCount * (sizeof(int) + sizeof(int) + MAX_STRING_LENGTH); // Type + ID + value
@@ -163,29 +135,28 @@ void firmwareFlush(uint32_t* buffer, size_t& bufferSize) {
     }
 }
 
-const char* loadFirmware() {
+int loadFirmware(uint32_t address) {
     uint8_t byteBuffer[BUFFER_SIZE];  // Statically allocate buffer for raw data
     size_t numberOfWords = BUFFER_SIZE / sizeof(uint32_t);
 
-    const char* result = readAndLoadFlashData("firmware.bin", byteBuffer, numberOfWords);
-    if (std::strncmp(result, "Success", 7) != 0) {
-        return result;  // Return the error message
+    int result = readAndLoadFlashData("firmware.bin", byteBuffer, numberOfWords, address);
+    if (result != 0) {
+        return result;  // Return the error code
     }
 
     processFirmwareBuffer(byteBuffer, BUFFER_SIZE);
-    return "Success: Firmware loaded from flash.";
+    return 0; // Success
 }
 
-const char* flashFirmware() {
+int flashFirmware(uint32_t address) {
     size_t bufferSize = BUFFER_SIZE;
     uint32_t buffer[BUFFER_SIZE / sizeof(uint32_t)];  // Statically allocate buffer
 
     firmwareFlush(buffer, bufferSize);  // Flush firmware data to the buffer
 
-    const char* result = fileWrite("firmware.bin", buffer, bufferSize);
-    return result;  // Return success or failure message
+    int result = fileWrite("firmware.bin", buffer, bufferSize, address);
+    return result;  // Return success or failure code
 }
-
 
 void processFirmwareBuffer(uint8_t* bufferPtr, size_t bufferSize) {
     uint32_t intCount = 0;
@@ -241,19 +212,19 @@ void processFirmwareBuffer(uint8_t* bufferPtr, size_t bufferSize) {
     }
 }
 
-// firmwareOpen: Relays the text-based result from fileOpen
-const char* firmwareOpen(const char* str) {
-    return fileOpen(str);  // Directly return the message from fileOpen
+// firmwareOpen: Relays the result from fileOpen
+int firmwareOpen(const char* str) {
+    return fileOpen(str);  // Directly return the code from fileOpen
 }
 
 // Function to save name-ID pairs for firmware and return a success or error message
-const char* firmwareSaveHandles(const char* name, int id) {
-    if (!name || id < 0) return "not success: invalid name or ID";
+int firmwareSaveHandles(const char* name, int id) {
+    if (!name || id < 0) return 1; // Invalid name or ID
 
     for (int i = 0; i < firmwareNameIDCount; ++i) {
         if (std::strcmp(firmwareNameIDStorage[i].name, name) == 0) {
             firmwareNameIDStorage[i].id = id;
-            return "success: ID updated for existing firmware name";
+            return 0; // Success: ID updated for existing firmware name
         }
     }
 
@@ -262,10 +233,10 @@ const char* firmwareSaveHandles(const char* name, int id) {
         firmwareNameIDStorage[firmwareNameIDCount].name[MAX_STRING_LENGTH - 1] = '\0';
         firmwareNameIDStorage[firmwareNameIDCount].id = id;
         ++firmwareNameIDCount;
-        return "success: name-ID pair saved for firmware";
+        return 0; // Success: name-ID pair saved for firmware
     }
 
-    return "not success: firmware name-ID storage is full";
+    return 1; // Error: firmware name-ID storage is full
 }
 
 // Function to get ID from name
@@ -275,5 +246,6 @@ int firmwareGetIDFromName(const char* name) {
             return firmwareNameIDStorage[i].id;
         }
     }
-    return -1;
+    return -1; // Return -1 to indicate failure
 }
+

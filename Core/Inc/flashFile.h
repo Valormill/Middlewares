@@ -12,12 +12,12 @@
 #include <cstdint>
 
 // Function to load data from flash, returning raw data to be processed
-const char* readAndLoadFlashData(const char* handle, uint8_t* data, size_t& size);
+int readAndLoadFlashData(const char* handle, uint8_t* data, size_t& size, uint32_t addr);
 
 // Function to open a file by its handle
-const char* fileOpen(const char* handle);
+int fileOpen(const char* handle);
 
 // Function to write data to flash, passing buffer and size
-const char* fileWrite(const char* handle, uint32_t* data, size_t size);
+int fileWrite(const char* handle, uint32_t* data, size_t size, uint32_t addr);
 
 #endif // FLASHFILE_H

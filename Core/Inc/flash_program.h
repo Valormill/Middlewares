@@ -10,6 +10,7 @@
 
 #include "defs.h"
 #include "util.h"
+#include "main.h"
 
 //-----------------------------------------------------------------------------
 //
@@ -44,7 +45,7 @@ uint32_t flash_getPageAddress(uint32_t bank, uint32_t page);
 extern "C" {
 #endif
 
-const char* flash_pageEraseWriteVerify(uint32_t *data, uint32_t size, uint32_t addr);
+int flash_pageEraseWriteVerify(uint32_t *data, uint32_t size, uint32_t addr);
 
 #ifdef __cplusplus
 }
