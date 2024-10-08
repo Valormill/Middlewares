@@ -139,7 +139,7 @@ int loadFirmware(uint32_t address) {
     uint8_t byteBuffer[BUFFER_SIZE];  // Statically allocate buffer for raw data
     size_t numberOfWords = BUFFER_SIZE / sizeof(uint32_t);
 
-    int result = readAndLoadFlashData("firmware.bin", byteBuffer, numberOfWords, address);
+    int result = readAndLoadFlashData(byteBuffer, numberOfWords, address);
     if (result != 0) {
         return result;  // Return the error code
     }
@@ -154,7 +154,7 @@ int flashFirmware(uint32_t address) {
 
     firmwareFlush(buffer, bufferSize);  // Flush firmware data to the buffer
 
-    int result = fileWrite("firmware.bin", buffer, bufferSize, address);
+    int result = fileWrite(buffer, bufferSize, address);
     return result;  // Return success or failure code
 }
 

@@ -161,7 +161,7 @@ int loadConfig(uint32_t address) {
     uint8_t byteBuffer[BUFFER_SIZE];  // Allocate a buffer for raw data
     size_t numberOfWords = BUFFER_SIZE / sizeof(uint32_t);
 
-    int result = readAndLoadFlashData("config.bin", byteBuffer, numberOfWords, address);
+    int result = readAndLoadFlashData(byteBuffer, numberOfWords, address);
     if (result != 0) {
         return result;  // Return the error code
     }
@@ -176,7 +176,7 @@ int flashConfig(uint32_t address) {
 
     configFlush(buffer, bufferSize);  // Flush config data to the buffer
 
-    int result = fileWrite("config.bin", buffer, bufferSize, address);
+    int result = fileWrite(buffer, bufferSize, address);
     return result;  // Return success or failure code
 }
 

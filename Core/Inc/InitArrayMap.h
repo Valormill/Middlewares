@@ -5,8 +5,8 @@
 
 // Define constants for easy modification
 #define MAX_INT_ENTRIES 5         // Maximum number of integer entries
-#define MAX_STRING_ENTRIES 5      // Maximum number of string entries
-#define MAX_STRING_LENGTH 20      // Maximum length of string (including null terminator)
+#define MAX_STRING_ENTRIES 1000      // Maximum number of string entries
+#define MAX_STRING_LENGTH 50      // Maximum length of string (including null terminator)
 
 enum {
     TYPE_INT,

@@ -27,7 +27,7 @@
 char savedHandles[MAX_SAVED_HANDLES][MAX_HANDLE_NAME_LENGTH];
 int savedHandlesCount = 0;
 
-int readAndLoadFlashData(const char* handle, uint8_t* data, size_t& size, uint32_t addr)
+int readAndLoadFlashData(uint8_t* data, size_t& size, uint32_t addr)
 {
     int result;
 
@@ -63,7 +63,7 @@ int fileOpen(const char* handle) {
     return 1;  // Unknown handle
 }
 
-int fileWrite(const char* handle, uint32_t* data, size_t size, uint32_t addr) {
+int fileWrite(uint32_t* data, size_t size, uint32_t addr) {
     int result;
 
     // Use the provided address instead of hardcoded addresses

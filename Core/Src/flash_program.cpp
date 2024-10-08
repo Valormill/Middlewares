@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <cstring> // For std::memcpy
 #include <vector>
+#include "stm32u5xx_hal.h"
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -54,10 +55,10 @@ int flash_pageEraseWriteVerify(uint32_t *data, uint32_t size, uint32_t addr)
 
     address = flash_getPageAddress(associatedBank, associatedPage);
 
-    // Disable instruction cache
-    if (HAL_ICACHE_Disable() != HAL_OK) {
-        return 1;
-    }
+//    // Disable instruction cache
+//    if (HAL_ICACHE_Disable() != HAL_OK) {
+//        return 1;
+//    }
 
     // Unlock flash
     if (HAL_FLASH_Unlock() != HAL_OK) {
@@ -98,10 +99,10 @@ int flash_pageEraseWriteVerify(uint32_t *data, uint32_t size, uint32_t addr)
         return 1;
     }
 
-    // Enable instruction cache
-    if (HAL_ICACHE_Enable() != HAL_OK) {
-        return 1;
-    }
+//    // Enable instruction cache
+//    if (HAL_ICACHE_Enable() != HAL_OK) {
+//        return 1;
+//    }
 
     // Verify the data in the page
     address = flash_getPageAddress(associatedBank, associatedPage);
